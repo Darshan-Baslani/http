@@ -1,0 +1,11 @@
+They said it couldn't be done... so I'm building my own HTTP server from SCRATCH using nothing but Go! 🚀
+
+Forget frameworks and libraries for a second. I'm going deep, wrestling with raw TCP connections, parsing HTTP requests by hand, and building a server that will make you rethink everything you thought you knew about web infrastructure.
+
+This isn't just another side project; it's a journey to the very core of how the internet *actually* works. And while it's still under construction (the best things always are 😉), the insights I'm gaining into Go's networking and concurrency are absolutely game-changing.
+
+Think it's crazy? I call it learning.
+
+Want to see what's under the hood? Check out the project and let me know what you think! 👇
+
+#Go #Golang #HTTPServer #Developer #Programming #SoftwareEngineering #Networking #Tech #SideProject #LearnInPublic
