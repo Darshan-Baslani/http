@@ -8,8 +8,16 @@ import (
 	"http/utils"
 )
 
+type parserState int
+
+const (
+	initialized parserState = iota
+	done
+)
+
 type Request struct {
 	RequestLine RequestLine
+	state       parserState
 }
 
 type RequestLine struct {
@@ -18,41 +26,74 @@ type RequestLine struct {
 	Method        string
 }
 
-func RequestFromReader(reader io.Reader) (*Request, error) {
-	msg, err := io.ReadAll(reader)
-	if err != nil {
-		return nil, fmt.Errorf("cannot read the reader")
-	}
-
-	reqline, err := parseRequestLine(string(msg))
-	if err != nil {
-		return nil, fmt.Errorf("%s", err)
-	}
-
-	return &Request{*reqline}, nil
+type bufferStatus struct {
+	bytesRead int
+	bytesParsed int
 }
 
-func parseRequestLine(msg string) (*RequestLine, error){
-	if idx := strings.Index(msg, "\r\n"); idx != -1 {
+func RequestFromReader(reader io.Reader) (*Request, error) {
+	req := new(Request)
+	req.state = initialized
+	buffStatus := new(bufferStatus)
+	bufferSize := 8
+	for {
+		buffer := make([]byte, bufferSize)
+		readSize, err := reader.Read(buffer)
+		if err == io.EOF {
+			req.state = done
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("cannot read the reader")
+		}
+		buffStatus.bytesRead += readSize
+
+		buffer = buffer[:readSize]
+		bytesParsed, err := req.parse(&buffer)
+		if err != nil {
+			return nil, fmt.Errorf("%s", err)
+		}
+		buffStatus.bytesParsed += bytesParsed
+		buffer = append(buffer, make([]byte, bufferSize)...)
+	}
+
+	return req, nil
+}
+
+func (r *Request) parse(data *[]byte) (int, error) {
+	n, err := parseRequestLine(r, string(data))
+	if err != nil {
+		return -1, fmt.Errorf("%s", err)
+	}
+
+	return n, nil
+}
+
+func parseRequestLine(req *Request, msg string) (int, error){
+	fmt.Printf("raw msg: %q\n", msg)
+	idx := strings.Index(msg, "\r\n")
+	if idx != -1 {
 		msg = msg[:idx]
 	} else {
-		return nil, fmt.Errorf("empty string")
+		return 0, nil
 	}
 
 	parts := strings.Split(msg, " ")
 	if len(parts) != 3 {
-		return nil, fmt.Errorf("invalid number of parts in request line: %d", len(parts))
+		return -1, fmt.Errorf("invalid number of parts in request line: %d, string received: %s", len(parts), msg)
 	}
 	method, reqtarget, httpV := parts[0], parts[1], parts[2]
 
 	if (!utils.IsAllUpper(method)){
-		return nil, fmt.Errorf("method needs to be all upper case")
+		return -1, fmt.Errorf("method needs to be all upper case")
 	}
 
 	httpV = strings.TrimPrefix(httpV, "HTTP/")
 	if (httpV != "1.1") {
-		return nil, fmt.Errorf("http version not supported")
+		return -1, fmt.Errorf("http version not supported")
 	}
 
-	return &RequestLine{httpV, reqtarget, method}, nil
+	req.RequestLine = RequestLine{httpV, reqtarget, method}
+
+	return idx-1, nil
 }

@@ -14,11 +14,12 @@ func getLinesChannel(file io.ReadCloser) <-chan string {
 		str := ""
 		for {
 			stream := make([]byte, 8)
-			_, err := file.Read(stream)
+			readSize, err := file.Read(stream)
 			if err == io.EOF {
 				close(data)
 				break
 			}
+			stream = stream[:readSize]
 			if i := bytes.IndexByte(stream, byte('\n')); i != -1 {
 				str += string(stream[:i])
 				// fmt.Printf("read: %s\n", str)
