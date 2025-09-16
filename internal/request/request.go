@@ -36,6 +36,14 @@ func RequestFromReader(reader io.Reader) (*Request, error) {
 	req.state = initialized
 	buffStatus := new(bufferStatus)
 	bufferSize := 8
+
+	buffer := make([]byte, 1024)
+	n, err := reader.Read(buffer)
+	if err != nil && err != io.EOF {
+	}
+
+	fmt.Printf("Initial: %s\n", buffer[:n])
+
 	for {
 		buffer := make([]byte, bufferSize)
 		readSize, err := reader.Read(buffer)
@@ -55,13 +63,15 @@ func RequestFromReader(reader io.Reader) (*Request, error) {
 		}
 		buffStatus.bytesParsed += bytesParsed
 		buffer = append(buffer, make([]byte, bufferSize)...)
+		fmt.Printf("buffer: %s", buffer)
 	}
 
 	return req, nil
 }
 
 func (r *Request) parse(data *[]byte) (int, error) {
-	n, err := parseRequestLine(r, string(data))
+	fmt.Printf("data: %s\n", data)
+	n, err := parseRequestLine(r, string(*data))
 	if err != nil {
 		return -1, fmt.Errorf("%s", err)
 	}
