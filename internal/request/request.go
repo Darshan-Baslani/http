@@ -47,7 +47,6 @@ func RequestFromReader(reader io.Reader) (*Request, error) {
 		if err != nil {
 			return nil, fmt.Errorf("cannot read the reader")
 		}
-		fmt.Printf("after read : %s\n", buffer)
 		buffStatus.bytesRead += readSize
 
 		bytesParsed, err := req.parse(buffer[:buffStatus.bytesRead])
@@ -62,14 +61,12 @@ func RequestFromReader(reader io.Reader) (*Request, error) {
 			req.state = done
 			break
 		}
-		fmt.Printf("buffer len: %d\n", len(buffer))
 	}
 
 	return req, nil
 }
 
 func (r *Request) parse(data []byte) (int, error) {
-	fmt.Printf("data: %s\n", data)
 	n, err := parseRequestLine(r, string(data))
 	if err != nil {
 		return -1, fmt.Errorf("%s", err)
@@ -79,7 +76,6 @@ func (r *Request) parse(data []byte) (int, error) {
 }
 
 func parseRequestLine(req *Request, msg string) (int, error){
-	fmt.Printf("raw msg: %q\n", msg)
 	idx := strings.Index(msg, "\r\n")
 	if idx != -1 {
 		msg = msg[:idx]
