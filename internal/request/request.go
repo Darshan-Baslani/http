@@ -31,22 +31,18 @@ type bufferStatus struct {
 	bytesParsed int
 }
 
+// TODO: what if the buffsize is greater than request size?
+// we're currently expanding the buffsize every iter, maybe we should put 
+// conditions on that
 func RequestFromReader(reader io.Reader) (*Request, error) {
 	req := new(Request)
 	req.state = initialized
 	buffStatus := new(bufferStatus)
 	bufferSize := 8
 
-	buffer := make([]byte, 1024)
-	n, err := reader.Read(buffer)
-	if err != nil && err != io.EOF {
-	}
-
-	fmt.Printf("Initial: %s\n", buffer[:n])
-
+	buffer := make([]byte, bufferSize)
 	for {
-		buffer := make([]byte, bufferSize)
-		readSize, err := reader.Read(buffer)
+		readSize, err := reader.Read(buffer[buffStatus.bytesRead:])
 		if err == io.EOF {
 			req.state = done
 			break
@@ -54,24 +50,30 @@ func RequestFromReader(reader io.Reader) (*Request, error) {
 		if err != nil {
 			return nil, fmt.Errorf("cannot read the reader")
 		}
+		fmt.Printf("after read : %s\n", buffer)
 		buffStatus.bytesRead += readSize
 
-		buffer = buffer[:readSize]
-		bytesParsed, err := req.parse(&buffer)
+		bytesParsed, err := req.parse(buffer[:buffStatus.bytesRead])
 		if err != nil {
 			return nil, fmt.Errorf("%s", err)
 		}
-		buffStatus.bytesParsed += bytesParsed
-		buffer = append(buffer, make([]byte, bufferSize)...)
-		fmt.Printf("buffer: %s", buffer)
+
+		if bytesParsed == 0 {
+			buffer = append(buffer, make([]byte, readSize)...)
+		} else {
+			buffStatus.bytesParsed += bytesParsed
+			req.state = done
+			break
+		}
+		fmt.Printf("buffer len: %d\n", len(buffer))
 	}
 
 	return req, nil
 }
 
-func (r *Request) parse(data *[]byte) (int, error) {
+func (r *Request) parse(data []byte) (int, error) {
 	fmt.Printf("data: %s\n", data)
-	n, err := parseRequestLine(r, string(*data))
+	n, err := parseRequestLine(r, string(data))
 	if err != nil {
 		return -1, fmt.Errorf("%s", err)
 	}
@@ -105,5 +107,5 @@ func parseRequestLine(req *Request, msg string) (int, error){
 
 	req.RequestLine = RequestLine{httpV, reqtarget, method}
 
-	return idx-1, nil
+	return len(msg), nil
 }
