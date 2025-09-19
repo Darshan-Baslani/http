@@ -31,9 +31,6 @@ type bufferStatus struct {
 	bytesParsed int
 }
 
-// TODO: what if the buffsize is greater than request size?
-// we're currently expanding the buffsize every iter, maybe we should put 
-// conditions on that
 func RequestFromReader(reader io.Reader) (*Request, error) {
 	req := new(Request)
 	req.state = initialized
