@@ -38,7 +38,7 @@ func RequestFromReader(reader io.Reader) (*Request, error) {
 	req := new(Request)
 	req.state = initialized
 	buffStatus := new(bufferStatus)
-	bufferSize := 8
+	bufferSize := 16384
 
 	buffer := make([]byte, bufferSize)
 	for {
@@ -58,9 +58,9 @@ func RequestFromReader(reader io.Reader) (*Request, error) {
 			return nil, fmt.Errorf("%s", err)
 		}
 
-		if bytesParsed == 0 {
+		if bytesParsed == 0 && len(buffer) < buffStatus.bytesRead+readSize{
 			buffer = append(buffer, make([]byte, readSize)...)
-		} else {
+		} else if bytesParsed > 0{
 			buffStatus.bytesParsed += bytesParsed
 			req.state = done
 			break
