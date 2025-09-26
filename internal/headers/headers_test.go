@@ -26,4 +26,23 @@ func TestHeadersParser(t *testing.T) {
 	require.Error(t, err)
 	assert.Equal(t, 0, n)
 	assert.False(t, done)
+
+	// Test: Caps check in header
+	headers = NewHeaders()
+	data = []byte("HoST: localhost:42069\r\nDING: dong\r\n\r\n")
+	n, done, err = headers.Parse(data)
+	require.NoError(t, err)
+	require.NotNil(t, headers)
+	assert.Equal(t, 34, n)
+	assert.True(t, done)
+	assert.Equal(t, "localhost:42069", headers["Host"])
+	assert.Equal(t, "dong", headers["ding"])
+
+	// Test: Special char check
+	headers = NewHeaders()
+	data = []byte("H@ST: localhost:42069\r\nD^NG: dong\r\n\r\n")
+	n, done, err = headers.Parse(data)
+	require.Error(t, err)
+	assert.Equal(t, 0, n)
+	assert.False(t, done)
 }

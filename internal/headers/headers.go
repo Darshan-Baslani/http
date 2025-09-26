@@ -3,6 +3,9 @@ package headers
 import (
 	"bytes"
 	"fmt"
+	"strings"
+
+	"http/utils"
 )
 
 const (
@@ -32,7 +35,6 @@ func (h Headers) Parse(data []byte) (int, bool, error) {
 		}
 		readSize += crlfPos + 1
 
-		fmt.Printf("data: %s\ncrlfPos: %d\n", data[:crlfPos], crlfPos)
 		key, value, err := parseHeader(data[:crlfPos])
 		if err != nil {
 			readSize = 0
@@ -51,7 +53,11 @@ func parseHeader(data []byte) (string, string, error) {
 		return "", "", fmt.Errorf("unstructured request")
 	}
 
-	key := string(bytes.TrimSpace(data[:colon]))
+	key := strings.ToLower(string(bytes.TrimSpace(data[:colon])))
+	if !utils.IsValidFieldName(key) {
+		return "", "", fmt.Errorf("field name contains invalid chars")
+	}
+
 	value := string(bytes.TrimSpace(data[colon+1:]))
 
 	return key, value, nil
