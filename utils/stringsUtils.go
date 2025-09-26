@@ -22,8 +22,8 @@ func IsValidFieldName(s string) bool {
 		'`': true, '|': true, '~': true,
 	}
 
-	for _, r := range s {
-		if unicode.IsLetter(r) || unicode.IsDigit(r) || allowed[r] {
+	for _, c := range s {
+		if unicode.IsLetter(c) || unicode.IsDigit(c) || allowed[c] {
 			continue
 		}
 		return false

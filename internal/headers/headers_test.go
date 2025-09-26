@@ -14,8 +14,8 @@ func TestHeadersParser(t *testing.T) {
 	n, done, err := headers.Parse(data)
 	require.NoError(t, err)
 	require.NotNil(t, headers)
-	assert.Equal(t, "localhost:42069", headers["Host"])
-	assert.Equal(t, "Dong", headers["Ding"])
+	assert.Equal(t, "localhost:42069", headers["host"])
+	assert.Equal(t, "Dong", headers["ding"])
 	assert.Equal(t, 35, n)
 	assert.True(t, done)
 
@@ -35,7 +35,7 @@ func TestHeadersParser(t *testing.T) {
 	require.NotNil(t, headers)
 	assert.Equal(t, 34, n)
 	assert.True(t, done)
-	assert.Equal(t, "localhost:42069", headers["Host"])
+	assert.Equal(t, "localhost:42069", headers["host"])
 	assert.Equal(t, "dong", headers["ding"])
 
 	// Test: Special char check
